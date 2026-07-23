@@ -211,9 +211,30 @@ async function downloadMediaObject(event) {
         return true;
     });
 
-    uniqueMedia.forEach(media => {
-        browser.runtime.sendMessage(media);
-    });
+    if (uniqueMedia.length) {
+        uniqueMedia.forEach(media => {
+            browser.runtime.sendMessage(media);
+        });
+        return;
+    }
+
+    //Fallback: nothing was captured for this tweet, so the click would otherwise
+    //do nothing until the user reloaded the page. This happens when Twitter served
+    //the tweet from cache/bfcache (no request to intercept) or the interceptor in
+    //inject.js loaded after Twitter had already made the request. Fetch the tweet
+    //media on demand so the button works on the first click.
+    if (!mainTweetId) {
+        return;
+    }
+
+    try {
+        const medias = await extractGraphQlMedia(mainTweetId, getCookie('ct0'));
+        (medias || []).filter(Boolean).forEach(media => {
+            browser.runtime.sendMessage(media);
+        });
+    } catch (e) {
+        console.warn('[Twitter Media Assist] on-demand media fetch failed', e);
+    }
 }
 
 async function downloadVideoObject(tweet, tweetSelector, videoTags) {
