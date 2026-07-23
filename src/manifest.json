@@ -2,10 +2,13 @@
   "manifest_version": 2,
   "name": "Twitter Media Assist",
   "description": "For your better Twitter media experience.",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "browser_specific_settings": {
     "gecko": {
-      "id": "rectifying@gmail.com"
+      "id": "twitter-media-assist-fork@faragouji",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
   "permissions": [
