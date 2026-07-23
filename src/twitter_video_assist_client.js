@@ -191,12 +191,27 @@ async function downloadMediaObject(event) {
 
     const mainTweetId = extractMainTweetId(tweet);
 
-    const relatedMedia = sessionData.filter(media => 
-        media.tweetId === mainTweetId || 
+    const relatedMedia = sessionData.filter(media =>
+        media.tweetId === mainTweetId ||
         media.referencedBy === mainTweetId
     );
 
-    relatedMedia.forEach(media => {
+    //the same media can be intercepted more than once (on a video post page the
+    //video player requests its own config, producing a duplicate entry whose URL
+    //only differs by a query param such as ?tag=, so the URL-based dedup in
+    //inject.js misses it). Without this, the media was downloaded twice at once.
+    //Deduplicate by a stable per-media identity before dispatching the download.
+    const seen = new Set();
+    const uniqueMedia = relatedMedia.filter(media => {
+        const key = media.readableFilename
+            ? `${media.type}:${media.readableFilename}`
+            : (media.url || JSON.stringify(media));
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
+    uniqueMedia.forEach(media => {
         browser.runtime.sendMessage(media);
     });
 }
