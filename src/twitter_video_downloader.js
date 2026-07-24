@@ -40,7 +40,7 @@ function processBlobVideo(id, readableName, token) {
 
 function processGifVideo({ url, readableFilename }) {
     browser.storage.sync.get({
-        isConvertGIF: true,
+        isConvertGIF: false,
         isSaveMP4: true,
     }).then((items) => {
         if (items.isConvertGIF) {
