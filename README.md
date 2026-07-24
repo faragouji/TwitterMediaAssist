@@ -13,6 +13,7 @@ Firefox. It is not published to the add-ons store.
 | #1 | On a video **post page** the video downloaded **twice at once**. Twitter serves the same video across more than one API response with a differing URL query param (e.g. `?tag=12` vs `?tag=14`), so the URL-based dedup in `inject.js` stored two entries. | Deduplicate the media by a stable identity (`type` + `readableFilename`) in `downloadMediaObject()` before dispatching the download. |
 | #2 | Sometimes the download button **did nothing until the page was reloaded**. The button only reads media captured by the `inject.js` response interceptor; if the tweet came from cache/bfcache (no request to intercept) or the interceptor loaded after Twitter's request, nothing was captured. | On-demand fallback: when nothing is cached for the tweet, fetch it via `extractGraphQlMedia()`. Also inject the page scripts in parallel with `async=false` (`content.js`) to shrink the load race. |
 | #3 | — | Build prep for signing: new extension id `twitter-media-assist-fork@faragouji`, version `3.3.2`, `data_collection_permissions: none`. |
+| #5 | Downloaded files used Twitter's raw hash names, with no account handle. | Name downloads `handle-tweetId.ext` (account handle first) **by default** across video/GIF/image downloads, and resolve the `@handle` from either `core.screen_name` or `legacy.screen_name` so it no longer falls back to `unknown`. Version `3.3.3`. |
 
 ## How it works (quick map)
 

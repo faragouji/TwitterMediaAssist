@@ -110,7 +110,8 @@ function extractMedias(tweets) {
         const mediaArr = tweet?.legacy?.extended_entities?.media;
         if (!mediaArr) return;
 
-        const screenName = tweet.core?.user_results?.result?.core?.screen_name || 'unknown';
+        const userResult = tweet.core?.user_results?.result;
+        const screenName = userResult?.core?.screen_name || userResult?.legacy?.screen_name || 'unknown';
         const tweetId = tweet.legacy.id_str;
 
         mediaMap[tweetId] = mediaArr.map((media, index) => ({
@@ -166,7 +167,8 @@ async function extractGraphQlMedia(id, token) {
         })
 
         const medias = tweets.filter(tweet => !!tweet?.legacy?.extended_entities?.media).map(tweet => {
-            const screenName = tweet.core.user_results.result.legacy.screen_name
+            const userResult = tweet.core.user_results.result
+            const screenName = userResult.core?.screen_name || userResult.legacy?.screen_name
             const tweetId = tweet.legacy.id_str
             const medias = tweet.legacy.extended_entities.media
 
@@ -420,7 +422,7 @@ function mergeFragment(buffer, fragment) {
 function downloadTsVideo(data, tsFilename, readableName) {
     browser.storage.sync.get({
         spcificPathName: false,
-        readableName: false
+        readableName: true
     }).then((items) => {
         var blob = new Blob([data], {
             type: 'video/mp2t'
@@ -449,7 +451,7 @@ function fileExtension(url) {
 function downloadMp4Video({ url, readableFilename }) {
     browser.storage.sync.get({
         spcificPathName: false,
-        readableName: false
+        readableName: true
     }).then((items) => {
         let options = {
             url: url,
@@ -467,7 +469,7 @@ function downloadMp4Video({ url, readableFilename }) {
 function downloadImage({ url, readableFilename }) {
     browser.storage.sync.get({
         spcificPathName: false,
-        readableName: false
+        readableName: true
     }).then((items) => {
         const uploadedImageQuery = /https:\/\/pbs.twimg.com\/media\/(.*)?\?.*/g
         const fileNameRegex = /([^/\\&\?]+)(\.\w{2,4})(?=([\?&].*$|$))/

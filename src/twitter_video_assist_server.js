@@ -49,7 +49,7 @@ function processWorkerData(filename, readableFilename) {
     return (event) => {
         browser.storage.sync.get({
             spcificPathName: false,
-            readableName: false
+            readableName: true
         }).then((items) => {
             var u8Array = new Uint8Array(atob(event.data).split("").map(function (c) {
                 return c.charCodeAt(0)
