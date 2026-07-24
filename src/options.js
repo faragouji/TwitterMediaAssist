@@ -1,7 +1,7 @@
 function restoreOptions() {
 	browser.storage.sync.get({
 		spcificPathName: false,
-		readableName: false,
+		readableName: true,
 		isConvertGIF: true,
 		isSaveMP4: true,
 		isVideoSaveAsMP4: true,
