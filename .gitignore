@@ -3,3 +3,6 @@
 dist/
 node_modules/
 web-ext-artifacts/
+
+# Local signing state created by `web-ext sign` (remembers the AMO upload UUID)
+.amo-upload-uuid
