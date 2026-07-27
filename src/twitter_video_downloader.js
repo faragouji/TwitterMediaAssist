@@ -150,6 +150,48 @@ function extractMedias(tweets) {
     return medias;
 }
 
+//Token expected by cdn.syndication.twimg.com, derived purely from the tweet
+//id (same scheme Twitter's own embed/oEmbed widgets use). Lets us read a
+//public tweet's media without an internal, rotating GraphQL query id or login.
+function syndicationToken(id) {
+    return ((Number(id) / 1e15) * Math.PI)
+        .toString(6 ** 2)
+        .replace(/(0+|\.)/g, '')
+}
+
+//On-demand media fetch via the public syndication endpoint. Used as a fallback
+//when a tweet's media was never intercepted (common in the timeline for tweets
+//present before the interceptor was active). Unlike the internal GraphQL path,
+//this does not depend on a hardcoded query id that Twitter periodically rotates.
+async function extractSyndicationMedia(id) {
+    const token = syndicationToken(id)
+    const url = `https://cdn.syndication.twimg.com/tweet-result?id=${id}&lang=en&token=${token}`
+
+    const response = await fetch(url, { credentials: 'omit' })
+    if (!response.ok) {
+        throw { status: response.status, statusText: response.statusText }
+    }
+
+    const data = await response.json()
+    const screenName = data?.user?.screen_name || 'unknown'
+    const mediaArr = data?.mediaDetails || []
+
+    return mediaArr.map((media, index) => {
+        const readableFilename = mediaArr.length === 1
+            ? `${screenName}-${id}`
+            : `${screenName}-${id}-${index + 1}`
+
+        if (media.type === 'photo') {
+            return { type: 'image', url: refineImageSourceParams(media.media_url_https), readableFilename }
+        } else if (media.type === 'video') {
+            return { type: 'video', url: getMaximumBitrate(media.video_info.variants), readableFilename }
+        } else if (media.type === 'animated_gif') {
+            return { type: 'gif', url: getMaximumBitrate(media.video_info.variants), readableFilename }
+        }
+        return null
+    }).filter(Boolean)
+}
+
 async function extractGraphQlMedia(id, token) {
     try {
         const jsonResponse = await archiveTweetDetailJson(id, token)

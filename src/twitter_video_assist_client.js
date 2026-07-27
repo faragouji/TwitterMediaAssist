@@ -219,22 +219,38 @@ async function downloadMediaObject(event) {
     }
 
     //Fallback: nothing was captured for this tweet, so the click would otherwise
-    //do nothing until the user reloaded the page. This happens when Twitter served
-    //the tweet from cache/bfcache (no request to intercept) or the interceptor in
-    //inject.js loaded after Twitter had already made the request. Fetch the tweet
-    //media on demand so the button works on the first click.
+    //do nothing until the user reloaded the page (or, in the timeline, opened the
+    //post in a new tab). This happens when Twitter served the tweet from cache or
+    //rendered it before inject.js installed its interceptor, so no response was
+    //seen. Fetch the tweet media on demand so the button works on the first click.
     if (!mainTweetId) {
         return;
     }
 
+    let medias = [];
+
+    //Primary fallback: the public syndication endpoint. It needs no login and no
+    //internal GraphQL query id (which Twitter rotates and would otherwise go
+    //stale), so it is the reliable path for public tweets in the timeline.
     try {
-        const medias = await extractGraphQlMedia(mainTweetId, getCookie('ct0'));
-        (medias || []).filter(Boolean).forEach(media => {
-            browser.runtime.sendMessage(media);
-        });
+        medias = await extractSyndicationMedia(mainTweetId);
     } catch (e) {
-        console.warn('[Twitter Media Assist] on-demand media fetch failed', e);
+        console.warn('[Twitter Media Assist] syndication fallback failed', e);
     }
+
+    //Secondary fallback: the internal GraphQL path, for tweets the syndication
+    //endpoint won't serve (e.g. login-gated), reusing the page's own session.
+    if (!medias.length) {
+        try {
+            medias = await extractGraphQlMedia(mainTweetId, getCookie('ct0')) || [];
+        } catch (e) {
+            console.warn('[Twitter Media Assist] graphql fallback failed', e);
+        }
+    }
+
+    medias.filter(Boolean).forEach(media => {
+        browser.runtime.sendMessage(media);
+    });
 }
 
 async function downloadVideoObject(tweet, tweetSelector, videoTags) {
