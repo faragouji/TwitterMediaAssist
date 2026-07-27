@@ -76,12 +76,31 @@ restarts on Firefox release.
 > If you also had the original store version installed, remove it — this fork
 > uses a different id, so both would run side by side and add two buttons.
 
+## Publish a GitHub release
+
+To archive/share a build, `release.ps1` creates a GitHub release tagged
+`v<version>` (read from `src/manifest.json`) with the signed `.xpi` attached.
+Run it **after** `./sign.ps1`, and make sure the GitHub CLI is authenticated
+(`gh auth status`):
+
+```powershell
+./sign.ps1        # produces the signed .xpi in dist/
+./release.ps1     # tags v<version> and uploads the .xpi as a release asset
+```
+
+It finds the signed package for the current version in `dist/`, copies it to a
+clean asset name (`twitter_media_assist-<version>.xpi`), and refuses to run if a
+release for that version already exists. Pass `-NotesFile <path.md>` to supply
+custom release notes (otherwise a short default with install instructions is
+used); `-Repo` and `-Target` override the defaults (`faragouji/...`, `master`).
+
 ## Updating after code changes
 
-1. Make the change (ideally on a branch + PR).
+1. Make the change (ideally on a branch + PR) and merge to `master`.
 2. Bump `version` in `src/manifest.json` (AMO rejects re-uploading the same version).
-3. Run `./sign.ps1` again and reinstall the new `.xpi`; Firefox upgrades it in
+3. `./sign.ps1` — re-sign, then reinstall the new `.xpi`; Firefox upgrades it in
    place via the shared extension id.
+4. `./release.ps1` — optionally publish the new signed build as a GitHub release.
 
 ---
 
