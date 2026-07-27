@@ -15,6 +15,7 @@ Firefox. It is not published to the add-ons store.
 | #3 | — | Build prep for signing: new extension id `twitter-media-assist-fork@faragouji`, version `3.3.2`, `data_collection_permissions: none`. |
 | #5 | Downloaded files used Twitter's raw hash names, with no account handle. | Name downloads `handle-tweetId.ext` (account handle first) **by default** across video/GIF/image downloads, and resolve the `@handle` from either `core.screen_name` or `legacy.screen_name` so it no longer falls back to `unknown`. Version `3.3.3`. |
 | #6 | Twitter GIFs were saved both as an animated `.gif` and as `.mp4`. | Default the "save GIF as GIF" conversion (`isConvertGIF`) to **off**, so Twitter GIFs download only as MP4. Re-enable it in the options page if wanted. Version `3.3.4`. |
+| #7 | In the timeline, clicking download sometimes did nothing (tweet not intercepted; the on-demand fallback used an internal GraphQL query id that Twitter had rotated). | Add a robust on-demand fallback via the public `cdn.syndication.twimg.com` endpoint (no login, no rotating query id) as the primary fallback, keeping the GraphQL path as secondary for login-gated tweets. Version `3.3.5`. |
 
 ## How it works (quick map)
 
